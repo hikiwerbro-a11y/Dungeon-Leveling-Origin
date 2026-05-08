@@ -5,11 +5,26 @@ local HttpService = game:GetService("HttpService")
 function MyKeyAuth:init(name, ownerid, ver)
     self.name, self.ownerid, self.ver = name, ownerid, ver
     local url = "https://keyauth.win/api/1.2/?type=init&name="..name.."&ownerid="..ownerid.."&ver="..ver
+    
     local ok, res = pcall(function() return game:HttpGet(url) end)
+    
+    -- ПЕЧАТАЕМ ОТВЕТ В КОНСОЛЬ ДЛЯ ПРОВЕРКИ
+    print("KeyAuth Response: " .. tostring(res))
+    
     if not ok then return false, "Ошибка сети" end
+    
     local decode_ok, data = pcall(function() return HttpService:JSONDecode(res) end)
-    if not decode_ok then return false, "Ошибка парсинга" end
-    if data.success then self.sessionid = data.sessionid return true else return false, data.message end
+    if not decode_ok then 
+        warn("JSON Decode Failed! Raw response was printed above.")
+        return false, "Ошибка парсинга" 
+    end
+    
+    if data.success then
+        self.sessionid = data.sessionid
+        return true
+    else
+        return false, data.message
+    end
 end
 
 function MyKeyAuth:license(key)
