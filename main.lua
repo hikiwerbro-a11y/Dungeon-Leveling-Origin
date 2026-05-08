@@ -67,18 +67,6 @@ AuthTab:CreateButton({
 
 -- [[ 4. ТВОЕ ОСНОВНОЕ МЕНЮ (ЧИТ) ]]
 function StartCheatMenu()
-    local MainRay = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
-    local Window = MainRay:CreateWindow({
-        Name = "Dungeon Origin | Меню чита",
-        ConfigurationSaving = { Enabled = true, Folder = "DungeonSaves" }
-    })
-    
-    local MainTab = Window:CreateTab("Функции", 4483362458)
-    
-    MainTab:CreateLabel("Скрипт успешно активирован!")
-    -- Тут твои функции (InfJump, WalkSpeed и т.д.)
-end
-function StartCheatMenu()
     -- [[ А СЮДА ТЫ ПЕРЕНОСИШЬ СВОЙ ОСНОВНОЙ ЧИТ ]]
     local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
