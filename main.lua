@@ -22,7 +22,11 @@ end
 -- [[ 2. ТВОИ ДАННЫЕ (ПРОВЕРЬ ИХ В ПАНЕЛИ ЕЩЕ РАЗ) ]]
 local name = "Dungeon Leveling Origin";
 local ownerid = "m2dvuf0xQy";
+local AppSecret = "e75c1fe66a123dbce41e9728f6d7f02b34e8c8575ea5db688bd50a6d3c446597";
 local version = "1.0";
+
+-- ПРАВИЛЬНЫЙ ВЫЗОВ (имена переменных должны совпадать с теми, что выше!)
+local init_ok, init_msg = MyKeyAuth:init(name, ownerid, AppSecret, version)
 
 -- [[ 3. ЗАПУСК ИНТЕРФЕЙСА ]]
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
