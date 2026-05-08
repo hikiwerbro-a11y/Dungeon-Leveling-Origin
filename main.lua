@@ -1,20 +1,9 @@
--- [[ ВСТРОЕННАЯ БИБЛИОТЕКА KEYAUTH ]]
+-- [[ ВСТРОЕННАЯ БИБЛИОТЕКА KEYAUTH (ПЛАН Б) ]]
 local KeyAuthApp = (function()
-    local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/KeyAuth/KeyAuth-Lua-Example/main/KeyAuth.lua"))()
-    if not library then
-        -- Если сервер KeyAuth лежит, используем резервный метод
-        return nil 
-    end
-    return library
+    local a={}local b=game:GetService("HttpService")local function c(d,e)local f=game:HttpGet("https://keyauth.win/api/1.2/?type="..d..e)return b:JSONDecode(f)end;function a:init(g,h,i,j)self.name=g;self.ownerid=h;self.secret=i;self.version=j;local k=c("init","&name="..g.."&ownerid="..h.."&secret="..i.."&ver="..j)if k.success then self.sessionid=k.sessionid else warn(k.message)end end;function a:license(l)local k=c("license","&name="..self.name.."&ownerid="..self.ownerid.."&key="..l.."&sessionid="..self.sessionid)if k.success then return true else return false,k.message end end;return a
 end)()
 
--- Если всё же не загрузилось, попробуем еще раз через секунду
-if not KeyAuthApp then
-    task.wait(1)
-    KeyAuthApp = loadstring(game:HttpGet("https://raw.githubusercontent.com/KeyAuth/KeyAuth-Lua-Example/main/KeyAuth.lua"))()
-end
-
--- [[ НАСТРОЙКИ ]]
+-- [[ НАСТРОЙКИ ТВОЕГО ПРИЛОЖЕНИЯ ]]
 local KeyAuth_Settings = {
     ApplicationName = "Dungeon Leveling Origin",
     OwnerID = "m2dvuf0xQy",
@@ -22,18 +11,16 @@ local KeyAuth_Settings = {
     Version = "1.0"
 }
 
--- Инициализация
-if KeyAuthApp then
-    KeyAuthApp:init(KeyAuth_Settings.ApplicationName, KeyAuth_Settings.OwnerID, KeyAuth_Settings.ApplicationSecret, KeyAuth_Settings.Version)
-end
+-- Инициализация системы ключей
+KeyAuthApp:init(KeyAuth_Settings.ApplicationName, KeyAuth_Settings.OwnerID, KeyAuth_Settings.ApplicationSecret, KeyAuth_Settings.Version)
 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 -- [[ ОКНО АВТОРИЗАЦИИ ]]
 local KeyWindow = Rayfield:CreateWindow({
-    Name = "KeyAuth Что-бы не втыкали | Dungeon Origin",
-    LoadingTitle = "Подключение к серверам...",
-    LoadingSubtitle = "by PEP-0.1",
+    Name = "KeyAuth | Dungeon Origin",
+    LoadingTitle = "Авторизация...",
+    LoadingSubtitle = "by by PEP0.2",
     ConfigurationSaving = { Enabled = false }
 })
 
@@ -49,31 +36,23 @@ AuthTab:CreateInput({
 AuthTab:CreateButton({
     Name = "Активировать",
     Callback = function()
-        if not KeyAuthApp then
-            Rayfield:Notify({Title = "Ошибка", Content = "Библиотека KeyAuth не загружена!", Duration = 5})
-            return
-        end
-
-        -- Проверка ключа
-        local is_valid = KeyAuthApp:license(EnteredKey)
+        local is_valid, msg = KeyAuthApp:license(EnteredKey)
         
         if is_valid then
             Rayfield:Notify({Title = "Успех!", Content = "Лицензия подтверждена!", Duration = 3})
-            
             task.wait(1)
-            Rayfield:Destroy() -- Закрываем окно ключа
-            
+            Rayfield:Destroy()
             task.wait(0.5)
             StartCheatMenu() -- Запускаем основной чит
         else
-            Rayfield:Notify({Title = "Ошибка", Content = "Неверный ключ или время истекло!", Duration = 3})
+            Rayfield:Notify({Title = "Ошибка", Content = "Неверный ключ: " .. tostring(msg), Duration = 3})
         end
     end,
 })
 
--- [[ ТВОЙ ОСНОВНОЙ СКРИПТ (СУДА ПЕРЕНЕСИ СВОЕ МЕНЮ) ]]
+-- [[ ФУНКЦИЯ ТВОЕГО ОСНОВНОГО МЕНЮ ]]
 function StartCheatMenu()
-   local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+    local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
     Name = "Dungeon Origin | By PEP-0.2",
@@ -259,12 +238,3 @@ Tab:CreateSlider({Name = "Скорость Атаки (Attr)", Range = {1, 30}, 
 Tab:CreateToggle({Name = "Анти-Замедление (NoSlow)", CurrentValue = false, Callback = function(v) Config.NoSlowdown = v end})
 Tab:CreateToggle({Name = "Бесконечные Прыжки", CurrentValue = false, Callback = function(v) Config.InfJump = v end})
 Tab:CreateSlider({Name = "Сила Прыжка", Range = {20, 150}, Increment = 1, CurrentValue = 45, Callback = function(v) Config.JumpPower = v end})
-    Rayfield:Notify({
-        Title = "Готово!",
-        Content = "Приятной игры, чит активирован.",
-        Duration = 5
-    })
-
-    -- Тут дальше вставляй все свои Toggles, Sliders и прочую логику, которую мы писали в начале
-    print("Чит успешно запущен после проверки ключа!")
-end
