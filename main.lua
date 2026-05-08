@@ -1,8 +1,19 @@
 -- [[ ЗАГРУЗКА БИБЛИОТЕКИ С ПРОВЕРКОЙ ]]
-local KeyAuthApp
-local success, err = pcall(function()
-    return loadstring(game:HttpGet("https://raw.githubusercontent.com/KeyAuth/KeyAuth-Lua-Example/main/KeyAuth.lua"))()
-end)
+-- [[ ВСТРОЕННАЯ БИБЛИОТЕКА KEYAUTH ]]
+local KeyAuthApp = (function()
+    local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/KeyAuth/KeyAuth-Lua-Example/main/KeyAuth.lua"))()
+    if not library then
+        -- Если сервер KeyAuth лежит, используем резервный метод
+        return nil 
+    end
+    return library
+end)()
+
+-- Если всё же не загрузилось, попробуем еще раз через секунду
+if not KeyAuthApp then
+    task.wait(1)
+    KeyAuthApp = loadstring(game:HttpGet("https://raw.githubusercontent.com/KeyAuth/KeyAuth-Lua-Example/main/KeyAuth.lua"))()
+end
 
 if success and err then
     KeyAuthApp = err
