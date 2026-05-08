@@ -23,8 +23,6 @@ end
 local name = "Dungeon Leveling Origin";
 local ownerid = "m2dvuf0xQy";
 local version = "1.0";
-local AppSecret = "e75c1fe66a123dbce41e9728f6d7f02b34e8c8575ea5db688bd50a6d3c446597";
-local init_ok, init_msg = MyKeyAuth:init(AppName, AppOwner, AppSecret, "1.0")
 
 -- [[ 3. ЗАПУСК ИНТЕРФЕЙСА ]]
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
