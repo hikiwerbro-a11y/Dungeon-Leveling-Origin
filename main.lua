@@ -1,5 +1,5 @@
 local HttpService = game:GetService("HttpService")
-local GITHUB_URL = "ТВОЯ_RAW_ССЫЛКА_НА_JSON_ФАЙЛ" -- Вставь сюда ссылку на GitHub (кнопка Raw)
+local GITHUB_URL = "https://raw.githubusercontent.com/hikiwerbro-a11y/Dungeon-Leveling-Origin/refs/heads/main/keys.json" -- Вставь сюда ссылку на GitHub (кнопка Raw)
 
 -- Функция для получения списка ключей
 local function GetRemoteKeys()
