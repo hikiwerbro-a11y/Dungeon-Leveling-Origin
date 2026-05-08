@@ -1,75 +1,82 @@
--- [[ 1. ВСТРОЕННАЯ БИБЛИОТЕКА KEYAUTH ]]
-local KeyAuthApp = (function()
-    local a={}local b=game:GetService("HttpService")
-    local function c(d,e)
-        local success, result = pcall(function()
-            return game:HttpGet("https://keyauth.win/api/1.2/?type="..d..e)
-        end)
-        if not success then return {success = false, message = "Ошибка сети"} end
-        return b:JSONDecode(result)
-    end
-    function a:init(g,h,i,j)
-        self.name=g;self.ownerid=h;self.secret=i;self.version=j
-        local k=c("init","&name="..g.."&ownerid="..h.."&secret="..i.."&ver="..j)
-        if k.success then self.sessionid=k.sessionid else warn("Init fail: "..tostring(k.message)) end
-    end
-    function a:license(l)
-        local k=c("license","&name="..self.name.."&ownerid="..self.ownerid.."&key="..l.."&sessionid="..self.sessionid)
-        if k.success then return true, k.message else return false, k.message end
-    end
-    return a
-end)()
+-- [[ 1. ПРОВЕРКА ИНИЦИАЛИЗАЦИИ БИБЛИОТЕКИ ]]
+local MyKeyAuth = {}
+local HttpService = game:GetService("HttpService")
 
--- [[ 2. ТВОИ НАСТРОЙКИ ]]
-local Settings = {
-    Name = "Dungeon Leveling Origin",
-    OwnerID = "m2dvuf0xQy",
-    Secret = "e75c1fe66a123dbce41e9728f6d7f02b34e8c8575ea5db688bd50a6d3c446597",
-    Version = "1.0"
-}
+function MyKeyAuth:init(name, ownerid, secret, ver)
+    self.name = name
+    self.ownerid = ownerid
+    self.secret = secret
+    self.ver = ver
+    
+    local res = game:HttpGet("https://keyauth.win/api/1.2/?type=init&name="..name.."&ownerid="..ownerid.."&secret="..secret.."&ver="..ver)
+    local data = HttpService:JSONDecode(res)
+    
+    if data.success then
+        self.sessionid = data.sessionid
+        return true
+    else
+        return false, data.message
+    end
+end
 
--- Инициализация связи с сервером
-KeyAuthApp:init(Settings.Name, Settings.OwnerID, Settings.Secret, Settings.Version)
+function MyKeyAuth:license(key)
+    if not self.sessionid then return false, "Сессия не создана" end
+    local res = game:HttpGet("https://keyauth.win/api/1.2/?type=license&name="..self.name.."&ownerid="..self.ownerid.."&key="..key.."&sessionid="..self.sessionid)
+    local data = HttpService:JSONDecode(res)
+    return data.success, data.message
+end
 
--- [[ 3. ЗАГРУЗКА ИНТЕРФЕЙСА ]]
+-- [[ 2. ТВОИ ДАННЫЕ ]]
+local AppName = "Dungeon Leveling Origin"
+local AppOwner = "m2dvuf0xQy"
+local AppSecret = "e75c1fe66a123dbce41e9728f6d7f02b34e8c8575ea5db688bd50a6d3c446597"
+local AppVer = "1.0"
+
+-- Сразу запускаем подключение к серверу
+local init_ok, err = MyKeyAuth:init(AppName, AppOwner, AppSecret, AppVer)
+
+-- [[ 3. ИНТЕРФЕЙС RAYFIELD ]]
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local KeyWindow = Rayfield:CreateWindow({
     Name = "Key System | Dungeon Origin",
-    LoadingTitle = "Проверка лицензии...",
+    LoadingTitle = "Подключение к KeyAuth...",
     LoadingSubtitle = "by hikiwerbro",
     ConfigurationSaving = { Enabled = false }
 })
 
-local AuthTab = KeyWindow:CreateTab("Авторизация", 4483362458)
+local AuthTab = KeyWindow:CreateTab("Вход", 4483362458)
 local EnteredKey = ""
 
 AuthTab:CreateInput({
-    Name = "Введите ваш ключ",
-    PlaceholderText = "KEYAUTH-XXXXX...",
+    Name = "Лицензионный ключ",
+    PlaceholderText = "Вставь ключ сюда...",
     Callback = function(Text) EnteredKey = Text end,
 })
 
 AuthTab:CreateButton({
-    Name = "Активировать ключ",
+    Name = "Активировать",
     Callback = function()
-        -- Теперь это реальная активация!
-        local success, message = KeyAuthApp:license(EnteredKey)
+        if not init_ok then
+            Rayfield:Notify({Title = "Ошибка инициализации", Content = "Сервер KeyAuth недоступен: " .. tostring(err), Duration = 5})
+            return
+        end
+
+        -- ТЕПЕРЬ МЫ ИСПОЛЬЗУЕМ MyKeyAuth
+        local success, message = MyKeyAuth:license(EnteredKey)
         
         if success then
-            Rayfield:Notify({Title = "Доступ разрешен!", Content = "Ключ активирован и привязан.", Duration = 3})
+            Rayfield:Notify({Title = "Доступ получен!", Content = "Ключ активирован.", Duration = 3})
             task.wait(1)
             Rayfield:Destroy()
-            StartCheatMenu() -- Запуск твоего основного чита
+            StartCheatMenu() -- Эту функцию оставь внизу своего файла, как была
         else
-            Rayfield:Notify({Title = "Ошибка ключа", Content = "Инфо: " .. tostring(message), Duration = 5})
+            Rayfield:Notify({Title = "Ошибка доступа", Content = "Ответ: " .. tostring(message), Duration = 5})
         end
     end,
 })
-
--- [[ 4. ФУНКЦИЯ ТВОЕГО ЧИТА ]]
 function StartCheatMenu()
-    -- Сюда вставляй весь остальной код своего меню (со слайдерами и кнопками)
+    -- [[ А СЮДА ТЫ ПЕРЕНОСИШЬ СВОЙ ОСНОВНОЙ ЧИТ ]]
     local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
@@ -256,5 +263,5 @@ Tab:CreateSlider({Name = "Скорость Атаки (Attr)", Range = {1, 30}, 
 Tab:CreateToggle({Name = "Анти-Замедление (NoSlow)", CurrentValue = false, Callback = function(v) Config.NoSlowdown = v end})
 Tab:CreateToggle({Name = "Бесконечные Прыжки", CurrentValue = false, Callback = function(v) Config.InfJump = v end})
 Tab:CreateSlider({Name = "Сила Прыжка", Range = {20, 150}, Increment = 1, CurrentValue = 45, Callback = function(v) Config.JumpPower = v end})
-    print("Чит успешно запущен после проверки ключа!")
-end -- ЗАКРЫВАЕТ ФУНКЦИЮ StartCheatMenu
+    print("Чит успешно запущен!")
+end -- Закрывает StartCheatMenu
