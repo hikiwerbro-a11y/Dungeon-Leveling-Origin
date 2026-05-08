@@ -1,46 +1,50 @@
--- [[ 1. ОБНОВЛЕННАЯ СИСТЕМА (БЕЗ SECRET) ]]
+-- [[ 1. СИСТЕМА KEYAUTH (БЕЗ SECRET) ]]
 local MyKeyAuth = {}
 local HttpService = game:GetService("HttpService")
 
 function MyKeyAuth:init(name, ownerid, ver)
     self.name, self.ownerid, self.ver = name, ownerid, ver
-    
-    -- Убрали secret из ссылки, оставили только то, что на твоем скриншоте
     local url = "https://keyauth.win/api/1.2/?type=init&name="..name.."&ownerid="..ownerid.."&ver="..ver
-    
     local ok, res = pcall(function() return game:HttpGet(url) end)
-    
     if not ok then return false, "Ошибка сети" end
-    
     local decode_ok, data = pcall(function() return HttpService:JSONDecode(res) end)
-    if not decode_ok then return false, "Ошибка парсинга ответа" end
-    
-    if data.success then
-        self.sessionid = data.sessionid
-        return true
-    else
-        return false, data.message
-    end
+    if not decode_ok then return false, "Ошибка парсинга" end
+    if data.success then self.sessionid = data.sessionid return true else return false, data.message end
 end
 
 function MyKeyAuth:license(key)
-    -- В ссылке лицензии тоже убираем secret
     local url = "https://keyauth.win/api/1.2/?type=license&name="..self.name.."&ownerid="..self.ownerid.."&key="..key.."&sessionid="..self.sessionid
     local res = game:HttpGet(url)
     local data = HttpService:JSONDecode(res)
     return data.success, data.message
 end
 
--- [[ 2. ТВОИ ДАННЫЕ (КАК НА СКРИНШОТЕ) ]]
+-- [[ 2. ДАННЫЕ ПРИЛОЖЕНИЯ ]]
 local name = "Dungeon Leveling Origin"
 local ownerid = "m2dvuf0xQy"
 local version = "1.0"
-
--- Теперь вызываем init только с 3 параметрами
 local init_ok, init_msg = MyKeyAuth:init(name, ownerid, version)
 
--- [[ 3. КНОПКА В ТВОЕМ МЕНЮ ]]
--- (Внутри колбэка кнопки Активировать используй это):
+-- [[ 3. СОЗДАНИЕ ИНТЕРФЕЙСА RAYFIELD ]]
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local KeyWindow = Rayfield:CreateWindow({
+    Name = "Key System | "..name,
+    LoadingTitle = "Загрузка...",
+    ConfigurationSaving = { Enabled = false }
+})
+
+-- ВОТ ЭТА СТРОКА БЫЛА ПРОПУЩЕНА (Создаем саму вкладку)
+local AuthTab = KeyWindow:CreateTab("Вход", 4483362458) 
+local EnteredKey = ""
+
+AuthTab:CreateInput({
+    Name = "Введите ключ",
+    PlaceholderText = "Твой ключ здесь...",
+    Callback = function(Text)
+        EnteredKey = Text
+    end,
+})
+
 AuthTab:CreateButton({
     Name = "Активировать",
     Callback = function()
@@ -54,12 +58,26 @@ AuthTab:CreateButton({
             Rayfield:Notify({Title = "Доступ!", Content = "Взлом активирован"})
             task.wait(1)
             Rayfield:Destroy()
-            StartCheatMenu()
+            StartCheatMenu() -- Запуск твоего основного меню
         else
-            Rayfield:Notify({Title = "Ошибка", Content = msg})
+            Rayfield:Notify({Title = "Ошибка", Content = "Ключ не подходит: "..tostring(msg)})
         end
     end,
 })
+
+-- [[ 4. ТВОЕ ОСНОВНОЕ МЕНЮ (ЧИТ) ]]
+function StartCheatMenu()
+    local MainRay = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+    local Window = MainRay:CreateWindow({
+        Name = "Dungeon Origin | Меню чита",
+        ConfigurationSaving = { Enabled = true, Folder = "DungeonSaves" }
+    })
+    
+    local MainTab = Window:CreateTab("Функции", 4483362458)
+    
+    MainTab:CreateLabel("Скрипт успешно активирован!")
+    -- Тут твои функции (InfJump, WalkSpeed и т.д.)
+end
 function StartCheatMenu()
     -- [[ А СЮДА ТЫ ПЕРЕНОСИШЬ СВОЙ ОСНОВНОЙ ЧИТ ]]
     local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
