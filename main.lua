@@ -182,9 +182,9 @@ end
 
 -- [[ ИНТЕРФЕЙС KEYAUTH ]]
 local KeyWindow = Rayfield:CreateWindow({
-    Name = "KeyAuth System",
+    Name = "KeyAuth Что-бы не втыкали",
     LoadingTitle = "Подключение к серверу...",
-    LoadingSubtitle = "by Gemini",
+    LoadingSubtitle = "by PEP-0.2",
     ConfigurationSaving = { Enabled = false }
 })
 
