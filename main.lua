@@ -67,9 +67,6 @@ AuthTab:CreateButton({
 
 -- [[ 4. ТВОЕ ОСНОВНОЕ МЕНЮ (ЧИТ) ]]
 function StartCheatMenu()
-    -- [[ А СЮДА ТЫ ПЕРЕНОСИШЬ СВОЙ ОСНОВНОЙ ЧИТ ]]
-    local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
-
 local Window = Rayfield:CreateWindow({
     Name = "Dungeon Origin | By PEP-0.2",
     LoadingTitle = "Пизда же есть...",
