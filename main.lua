@@ -1,75 +1,77 @@
--- [[ 1. СИСТЕМА KEYAUTH (БЕЗ SECRET) ]]
-local MyKeyAuth = {}
 local HttpService = game:GetService("HttpService")
+local GITHUB_URL = "ТВОЯ_RAW_ССЫЛКА_НА_JSON_ФАЙЛ" -- Вставь сюда ссылку на GitHub (кнопка Raw)
 
-function MyKeyAuth:init(name, ownerid, ver)
-    self.name, self.ownerid, self.ver = name, ownerid, ver
-    local url = "https://keyauth.win/api/1.2/?type=init&name="..name.."&ownerid="..ownerid.."&ver="..ver
-    
-    local ok, res = pcall(function() return game:HttpGet(url) end)
-    
-    -- ПЕЧАТАЕМ ОТВЕТ В КОНСОЛЬ ДЛЯ ПРОВЕРКИ
-    print("KeyAuth Response: " .. tostring(res))
-    
-    if not ok then return false, "Ошибка сети" end
-    
-    local decode_ok, data = pcall(function() return HttpService:JSONDecode(res) end)
-    if not decode_ok then 
-        warn("JSON Decode Failed! Raw response was printed above.")
-        return false, "Ошибка парсинга" 
+-- Функция для получения списка ключей
+local function GetRemoteKeys()
+    local ok, res = pcall(function() return game:HttpGet(GITHUB_URL) end)
+    if ok then
+        return HttpService:JSONDecode(res).KEYS
     end
-    
-    if data.success then
-        self.sessionid = data.sessionid
-        return true
-    else
-        return false, data.message
-    end
+    return {}
 end
 
-function MyKeyAuth:license(key)
-    local url = "https://keyauth.win/api/1.2/?type=license&name="..self.name.."&ownerid="..self.ownerid.."&key="..key.."&sessionid="..self.sessionid
-    local res = game:HttpGet(url)
-    local data = HttpService:JSONDecode(res)
-    return data.success, data.message
+-- Функция сохранения времени активации (локально на ПК)
+local function saveActivation(key, duration)
+    local data = {
+        key = key,
+        expireTime = os.time() + duration
+    }
+    writefile("dungeon_auth.txt", HttpService:JSONEncode(data))
 end
 
--- [[ 2. ДАННЫЕ ПРИЛОЖЕНИЯ ]]
-local name = "Dungeon Leveling Origin"
-local ownerid = "m2dvuf0xQy"
-local version = "1.0"
-local init_ok, init_msg = MyKeyAuth:init(name, ownerid, version)
-
--- [[ 3. СОЗДАНИЕ ИНТЕРФЕЙСА RAYFIELD ]]
+-- Функция проверки: не истекло ли время?
+local function checkExpiry()
+    if not isfile("dungeon_auth.txt") then return false end
+    local data = HttpService:JSONDecode(readfile("dungeon_auth.txt"))
+    
+    if os.time() > data.expireTime then
+        -- ВРЕМЯ ИСТЕКЛО
+        print("Время действия ключа закончилось!")
+        delfile("dungeon_auth.txt") -- Удаляем старый ключ
+        game:Shutdown() -- Или просто выключай скрипт
+        return false
+    end
+    return true
+end
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 local KeyWindow = Rayfield:CreateWindow({
-    Name = "Key System | "..name,
-    LoadingTitle = "Загрузка...",
+    Name = "Key System | GitHub Auth",
+    LoadingTitle = "Синхронизация...",
     ConfigurationSaving = { Enabled = false }
 })
 
--- ВОТ ЭТА СТРОКА БЫЛА ПРОПУЩЕНА (Создаем саму вкладку)
-local AuthTab = KeyWindow:CreateTab("Вход", 4483362458) 
+local AuthTab = KeyWindow:CreateTab("Вход", 4483362458)
 local EnteredKey = ""
 
 AuthTab:CreateInput({
     Name = "Введите ключ",
-    PlaceholderText = "Твой ключ здесь...",
     Callback = function(Text)
-        EnteredKey = Text
+        EnteredKey = Text -- Чтобы кнопка видела, что ты ввел
     end,
 })
 
 AuthTab:CreateButton({
-    Name = "Активировать (DEBUG MODE)",
+    Name = "Проверить ключ",
     Callback = function()
-        -- Мы просто игнорируем ошибку init_ok и сразу запускаем чит
-        Rayfield:Notify({Title = "Debug", Content = "Запуск без проверки ключа..."})
-        task.wait(0.5)
-        Rayfield:Destroy()
-        StartCheatMenu() 
+        local remoteKeys = GetRemoteKeys()
+        local duration = remoteKeys[EnteredKey]
+
+        if duration then
+            saveActivation(EnteredKey, duration)
+            print("Ключ принят! Время жизни: " .. duration .. " сек.")
+            KeyWindow:Destroy()
+            StartCheatMenu() -- Твой рабочий чит
+        else
+            print("Неверный ключ или он истек на сервере")
+        end
     end,
 })
+
+-- Авто-вход, если уже активирован
+if isfile("dungeon_auth.txt") and checkExpiry() then
+    KeyWindow:Destroy()
+    StartCheatMenu()
+end
 
 -- [[ 4. ТВОЕ ОСНОВНОЕ МЕНЮ (ЧИТ) ]]
 function StartCheatMenu()
@@ -258,4 +260,12 @@ Tab:CreateToggle({Name = "Анти-Замедление (NoSlow)", CurrentValue 
 Tab:CreateToggle({Name = "Бесконечные Прыжки", CurrentValue = false, Callback = function(v) Config.InfJump = v end})
 Tab:CreateSlider({Name = "Сила Прыжка", Range = {20, 150}, Increment = 1, CurrentValue = 45, Callback = function(v) Config.JumpPower = v end})
     print("Чит успешно запущен!")
-end -- Закрывает StartCheatMenu
+end
+-- Основной цикл проверки (работает в фоне)
+task.spawn(function()
+    while task.wait(60) do -- Проверка каждую минуту
+        if isfile("dungeon_auth.txt") then
+            if not checkExpiry() then break end
+        end
+    end
+end)
