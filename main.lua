@@ -61,22 +61,13 @@ AuthTab:CreateInput({
 })
 
 AuthTab:CreateButton({
-    Name = "Активировать",
+    Name = "Активировать (DEBUG MODE)",
     Callback = function()
-        if not init_ok then
-            Rayfield:Notify({Title = "Ошибка", Content = "Init Fail: "..tostring(init_msg)})
-            return
-        end
-        
-        local success, msg = MyKeyAuth:license(EnteredKey)
-        if success then
-            Rayfield:Notify({Title = "Доступ!", Content = "Взлом активирован"})
-            task.wait(1)
-            Rayfield:Destroy()
-            StartCheatMenu() -- Запуск твоего основного меню
-        else
-            Rayfield:Notify({Title = "Ошибка", Content = "Ключ не подходит: "..tostring(msg)})
-        end
+        -- Мы просто игнорируем ошибку init_ok и сразу запускаем чит
+        Rayfield:Notify({Title = "Debug", Content = "Запуск без проверки ключа..."})
+        task.wait(0.5)
+        Rayfield:Destroy()
+        StartCheatMenu() 
     end,
 })
 
