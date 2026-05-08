@@ -275,7 +275,7 @@ end,
 
 -- Авто-вход и фоновая проверка
 if isfile("dungeon_auth.txt") and checkExpiry() then
-    KeyWindow:Destroy()
+    Rayfield:Destroy()
     StartCheatMenu()
 end
 
