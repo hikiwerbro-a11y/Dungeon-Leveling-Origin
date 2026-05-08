@@ -266,18 +266,19 @@ AuthTab:CreateButton({
     end,
 })
 
--- И в блоке авто-входа тоже замени:
 if isfile("dungeon_auth.txt") and checkExpiry() then
-    Rayfield:Destroy() -- ЗАМЕНИ ТУТ
-    StartCheatMenu()
-end,
-})
-
--- Авто-вход и фоновая проверка
-if isfile("dungeon_auth.txt") and checkExpiry() then
-    Rayfield:Destroy()
+    Rayfield:Destroy() 
     StartCheatMenu()
 end
+
+-- [[ 5. ФОНОВАЯ ПРОВЕРКА ]]
+task.spawn(function()
+    while task.wait(60) do
+        if isfile("dungeon_auth.txt") then
+            checkExpiry()
+        end
+    end
+end)
 
 task.spawn(function()
     while task.wait(60) do
