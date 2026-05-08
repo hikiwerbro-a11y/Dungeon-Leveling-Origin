@@ -36,16 +36,18 @@ AuthTab:CreateInput({
 AuthTab:CreateButton({
     Name = "Активировать",
     Callback = function()
-        -- Пока серверы KeyAuth тупят, используем временную проверку
-        -- Если длина ключа больше 10 символов, пускаем (для теста)
-        if #EnteredKey > 10 then
-            Rayfield:Notify({Title = "Успех!", Content = "Лицензия подтверждена!", Duration = 3})
+        -- Отправляем запрос на сервер KeyAuth для проверки и активации ключа
+        local is_valid, msg = KeyAuthApp:license(EnteredKey)
+        
+        if is_valid then
+            Rayfield:Notify({Title = "Успех!", Content = "Ключ активирован!", Duration = 3})
             task.wait(1)
             Rayfield:Destroy()
             task.wait(0.5)
-            StartCheatMenu()
+            StartCheatMenu() -- Запускаем основной чит
         else
-            Rayfield:Notify({Title = "Ошибка", Content = "Неверный формат ключа!", Duration = 3})
+            -- Если ключ неверный или уже использован другим человеком
+            Rayfield:Notify({Title = "Ошибка", Content = "Статус: " .. tostring(msg), Duration = 5})
         end
     end,
 })
