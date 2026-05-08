@@ -1,0 +1,7 @@
+{
+  "KEYS": {
+    "SECRET_1DAY_KEY": 86400,
+    "VIP_7DAYS_KEY": 604800,
+    "TEST_KEY": 60
+  }
+}
