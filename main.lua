@@ -200,17 +200,28 @@ AuthTab:CreateInput({
 AuthTab:CreateButton({
     Name = "Активировать",
     Callback = function()
-        -- Тут была бы проверка через KeyAuth API, но для удобства 
-        -- мы сохраняем логику, при которой ты управляешь доступом удаленно.
-        -- KeyAuth требует сложной библиотеки, поэтому я сделал универсальную заглушку,
-        -- которая позволит тебе потом легко обфусцировать это на luaobfuscator.com.
+        -- Реальная проверка через сервера KeyAuth
+        local status = KeyAuthApp:license(EnteredKey)
         
-        if #EnteredKey > 5 then
+        if status then
             Rayfield:Notify({Title = "Успех!", Content = "Лицензия подтверждена!", Duration = 3})
-            KeyWindow:Destroy()
-            StartScript()
+            
+            -- Исправленное закрытие окна для Rayfield
+            Rayfield:Destroy() 
+            
+            -- Ждем секунду, чтобы окно успело закрыться
+            task.wait(1)
+            
+            -- [[ ТВОЙ ОСНОВНОЙ СКРИПТ ЧИТА ]]
+            StartMyScript() -- Вызываем функцию запуска твоего меню
         else
-            Rayfield:Notify({Title = "Ошибка", Content = "Краткий или неверный ключ!", Duration = 3})
+            Rayfield:Notify({Title = "Ошибка", Content = "Неверный или истекший ключ!", Duration = 3})
         end
     end,
 })
+
+-- Функция для запуска твоего основного меню
+function StartMyScript()
+    -- Сюда вставь весь код твоего основного меню (Rayfield:CreateWindow для чита и т.д.)
+    print("Основное меню чита загружено!")
+end
