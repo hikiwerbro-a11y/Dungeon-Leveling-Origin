@@ -257,12 +257,20 @@ AuthTab:CreateButton({
         if duration then
             saveActivation(EnteredKey, duration)
             print("Ключ принят!")
-            KeyWindow:Destroy()
+            -- ЗАМЕНИ ЭТУ СТРОКУ:
+            Rayfield:Destroy() 
             StartCheatMenu() 
         else
             Rayfield:Notify({Title = "Ошибка", Content = "Неверный ключ!", Duration = 3})
         end
     end,
+})
+
+-- И в блоке авто-входа тоже замени:
+if isfile("dungeon_auth.txt") and checkExpiry() then
+    Rayfield:Destroy() -- ЗАМЕНИ ТУТ
+    StartCheatMenu()
+end,
 })
 
 -- Авто-вход и фоновая проверка
