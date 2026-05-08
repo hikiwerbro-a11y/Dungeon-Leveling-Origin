@@ -45,8 +45,9 @@ local EnteredKey = ""
 
 AuthTab:CreateInput({
     Name = "Введите ключ",
+    PlaceholderText = "Вставь ключ сюда...", -- ВОТ ЭТОЙ СТРОКИ НЕ ХВАТАЛО
     Callback = function(Text)
-        EnteredKey = Text -- Чтобы кнопка видела, что ты ввел
+        EnteredKey = Text
     end,
 })
 
