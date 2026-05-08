@@ -1,4 +1,3 @@
--- [[ ЗАГРУЗКА БИБЛИОТЕКИ С ПРОВЕРКОЙ ]]
 -- [[ ВСТРОЕННАЯ БИБЛИОТЕКА KEYAUTH ]]
 local KeyAuthApp = (function()
     local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/KeyAuth/KeyAuth-Lua-Example/main/KeyAuth.lua"))()
@@ -15,17 +14,11 @@ if not KeyAuthApp then
     KeyAuthApp = loadstring(game:HttpGet("https://raw.githubusercontent.com/KeyAuth/KeyAuth-Lua-Example/main/KeyAuth.lua"))()
 end
 
-if success and err then
-    KeyAuthApp = err
-else
-    warn("Ошибка загрузки KeyAuth: " .. tostring(err))
-end
-
 -- [[ НАСТРОЙКИ ]]
 local KeyAuth_Settings = {
     ApplicationName = "Dungeon Leveling Origin",
     OwnerID = "m2dvuf0xQy",
-    ApplicationSecret = "e75c1fe66a123dbce41e9728f6d7f02b34e8c8575ea5db688bd50a6d3c446597",
+    ApplicationSecret = "e75c1fe66a123dbce41e9728f6d7f02b34e8c8575ea5db688bd50a6d3e446597",
     Version = "1.0"
 }
 
