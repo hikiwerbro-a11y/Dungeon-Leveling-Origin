@@ -1,16 +1,17 @@
 local HttpService = game:GetService("HttpService")
-local GITHUB_URL = "https://raw.githubusercontent.com/hikiwerbro-a11y/Dungeon-Leveling-Origin/refs/heads/main/keys.json" -- Вставь сюда ссылку на GitHub (кнопка Raw)
+local GITHUB_URL = "https://raw.githubusercontent.com/hikiwerbro-a11y/Dungeon-Leveling-Origin/refs/heads/main/keys.json"
 
--- Функция для получения списка ключей
+-- [[ 1. ВСЕ ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ]]
+
 local function GetRemoteKeys()
     local ok, res = pcall(function() return game:HttpGet(GITHUB_URL) end)
     if ok then
-        return HttpService:JSONDecode(res).KEYS
+        local data = HttpService:JSONDecode(res)
+        return data.KEYS or {}
     end
     return {}
 end
 
--- Функция сохранения времени активации (локально на ПК)
 local function saveActivation(key, duration)
     local data = {
         key = key,
@@ -19,63 +20,26 @@ local function saveActivation(key, duration)
     writefile("dungeon_auth.txt", HttpService:JSONEncode(data))
 end
 
--- Функция проверки: не истекло ли время?
 local function checkExpiry()
     if not isfile("dungeon_auth.txt") then return false end
-    local data = HttpService:JSONDecode(readfile("dungeon_auth.txt"))
+    local ok, data = pcall(function() 
+        return HttpService:JSONDecode(readfile("dungeon_auth.txt")) 
+    end)
     
-    if os.time() > data.expireTime then
-        -- ВРЕМЯ ИСТЕКЛО
+    if not ok or os.time() > data.expireTime then
         print("Время действия ключа закончилось!")
-        delfile("dungeon_auth.txt") -- Удаляем старый ключ
-        game:Shutdown() -- Или просто выключай скрипт
+        if isfile("dungeon_auth.txt") then delfile("dungeon_auth.txt") end
+        game:Shutdown() 
         return false
     end
     return true
 end
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
-local KeyWindow = Rayfield:CreateWindow({
-    Name = "Key System | GitHub Auth",
-    LoadingTitle = "Синхронизация...",
-    ConfigurationSaving = { Enabled = false }
-})
 
-local AuthTab = KeyWindow:CreateTab("Вход", 4483362458)
-local EnteredKey = ""
-
-AuthTab:CreateInput({
-    Name = "Введите ключ",
-    PlaceholderText = "Вставь ключ сюда...", -- ВОТ ЭТОЙ СТРОКИ НЕ ХВАТАЛО
-    Callback = function(Text)
-        EnteredKey = Text
-    end,
-})
-
-AuthTab:CreateButton({
-    Name = "Проверить ключ",
-    Callback = function()
-        local remoteKeys = GetRemoteKeys()
-        local duration = remoteKeys[EnteredKey]
-
-        if duration then
-            saveActivation(EnteredKey, duration)
-            print("Ключ принят! Время жизни: " .. duration .. " сек.")
-            KeyWindow:Destroy()
-            StartCheatMenu() -- Твой рабочий чит
-        else
-            print("Неверный ключ или он истек на сервере")
-        end
-    end,
-})
-
--- Авто-вход, если уже активирован
-if isfile("dungeon_auth.txt") and checkExpiry() then
-    KeyWindow:Destroy()
-    StartCheatMenu()
-end
-
--- [[ 4. ТВОЕ ОСНОВНОЕ МЕНЮ (ЧИТ) ]]
+-- [[ 2. ТВОЕ ОСНОВНОЕ МЕНЮ (ЧИТ) ]]
+-- Объявляем функцию ДО того, как будем её вызывать в кнопке
 function StartCheatMenu()
+    local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
 local Window = Rayfield:CreateWindow({
     Name = "Dungeon Origin | By PEP-0.2",
     LoadingTitle = "Пизда же есть...",
@@ -260,13 +224,57 @@ Tab:CreateSlider({Name = "Скорость Атаки (Attr)", Range = {1, 30}, 
 Tab:CreateToggle({Name = "Анти-Замедление (NoSlow)", CurrentValue = false, Callback = function(v) Config.NoSlowdown = v end})
 Tab:CreateToggle({Name = "Бесконечные Прыжки", CurrentValue = false, Callback = function(v) Config.InfJump = v end})
 Tab:CreateSlider({Name = "Сила Прыжка", Range = {20, 150}, Increment = 1, CurrentValue = 45, Callback = function(v) Config.JumpPower = v end})
+
     print("Чит успешно запущен!")
 end
--- Основной цикл проверки (работает в фоне)
+
+-- [[ 3. ИНТЕРФЕЙС КЛЮЧ-СИСТЕМЫ ]]
+
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local KeyWindow = Rayfield:CreateWindow({
+    Name = "Key System | GitHub Auth",
+    LoadingTitle = "Синхронизация...",
+    ConfigurationSaving = { Enabled = false }
+})
+
+local AuthTab = KeyWindow:CreateTab("Вход", 4483362458)
+local EnteredKey = ""
+
+AuthTab:CreateInput({
+    Name = "Введите ключ",
+    PlaceholderText = "Вставь ключ сюда...", 
+    Callback = function(Text)
+        EnteredKey = Text
+    end,
+})
+
+AuthTab:CreateButton({
+    Name = "Проверить ключ",
+    Callback = function()
+        local remoteKeys = GetRemoteKeys()
+        local duration = remoteKeys[EnteredKey]
+
+        if duration then
+            saveActivation(EnteredKey, duration)
+            print("Ключ принят!")
+            KeyWindow:Destroy()
+            StartCheatMenu() 
+        else
+            Rayfield:Notify({Title = "Ошибка", Content = "Неверный ключ!", Duration = 3})
+        end
+    end,
+})
+
+-- Авто-вход и фоновая проверка
+if isfile("dungeon_auth.txt") and checkExpiry() then
+    KeyWindow:Destroy()
+    StartCheatMenu()
+end
+
 task.spawn(function()
-    while task.wait(60) do -- Проверка каждую минуту
+    while task.wait(60) do
         if isfile("dungeon_auth.txt") then
-            if not checkExpiry() then break end
+            checkExpiry()
         end
     end
 end)
