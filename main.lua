@@ -1,59 +1,75 @@
--- [[ УПРОЩЕННАЯ ЗАГРУЗКА ]]
-local success, Rayfield = pcall(function()
-    return loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
-end)
+-- [[ 1. ВСТРОЕННАЯ БИБЛИОТЕКА KEYAUTH ]]
+local KeyAuthApp = (function()
+    local a={}local b=game:GetService("HttpService")
+    local function c(d,e)
+        local success, result = pcall(function()
+            return game:HttpGet("https://keyauth.win/api/1.2/?type="..d..e)
+        end)
+        if not success then return {success = false, message = "Ошибка сети"} end
+        return b:JSONDecode(result)
+    end
+    function a:init(g,h,i,j)
+        self.name=g;self.ownerid=h;self.secret=i;self.version=j
+        local k=c("init","&name="..g.."&ownerid="..h.."&secret="..i.."&ver="..j)
+        if k.success then self.sessionid=k.sessionid else warn("Init fail: "..tostring(k.message)) end
+    end
+    function a:license(l)
+        local k=c("license","&name="..self.name.."&ownerid="..self.ownerid.."&key="..l.."&sessionid="..self.sessionid)
+        if k.success then return true, k.message else return false, k.message end
+    end
+    return a
+end)()
 
-if not success or not Rayfield then
-    warn("Rayfield не загрузился! Проверь интернет или инжектор.")
-    return
-end
-
--- [[ НАСТРОЙКИ KEYAUTH ]]
-local KeyAuth_Settings = {
-    ApplicationName = "Dungeon Leveling Origin",
+-- [[ 2. ТВОИ НАСТРОЙКИ ]]
+local Settings = {
+    Name = "Dungeon Leveling Origin",
     OwnerID = "m2dvuf0xQy",
-    ApplicationSecret = "e75c1fe66a123dbce41e9728f6d7f02b34e8c8575ea5db688bd50a6d3c446597",
+    Secret = "e75c1fe66a123dbce41e9728f6d7f02b34e8c8575ea5db688bd50a6d3c446597",
     Version = "1.0"
 }
 
--- [[ ОКНО АВТОРИЗАЦИИ ]]
+-- Инициализация связи с сервером
+KeyAuthApp:init(Settings.Name, Settings.OwnerID, Settings.Secret, Settings.Version)
+
+-- [[ 3. ЗАГРУЗКА ИНТЕРФЕЙСА ]]
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
 local KeyWindow = Rayfield:CreateWindow({
-    Name = "KeyAuth | Dungeon Origin",
-    LoadingTitle = "Подключение...",
-    LoadingSubtitle = "by by PEP0.2",
+    Name = "Key System | Dungeon Origin",
+    LoadingTitle = "Проверка лицензии...",
+    LoadingSubtitle = "by hikiwerbro",
     ConfigurationSaving = { Enabled = false }
 })
 
-local AuthTab = KeyWindow:CreateTab("Вход", 4483362458)
+local AuthTab = KeyWindow:CreateTab("Авторизация", 4483362458)
 local EnteredKey = ""
 
 AuthTab:CreateInput({
-    Name = "Лицензионный ключ",
-    PlaceholderText = "Вставь ключ сюда...",
+    Name = "Введите ваш ключ",
+    PlaceholderText = "KEYAUTH-XXXXX...",
     Callback = function(Text) EnteredKey = Text end,
 })
 
 AuthTab:CreateButton({
-    Name = "Активировать",
+    Name = "Активировать ключ",
     Callback = function()
-        -- Отправляем запрос на сервер KeyAuth для проверки и активации ключа
-        local is_valid, msg = KeyAuthApp:license(EnteredKey)
+        -- Теперь это реальная активация!
+        local success, message = KeyAuthApp:license(EnteredKey)
         
-        if is_valid then
-            Rayfield:Notify({Title = "Успех!", Content = "Ключ активирован!", Duration = 3})
+        if success then
+            Rayfield:Notify({Title = "Доступ разрешен!", Content = "Ключ активирован и привязан.", Duration = 3})
             task.wait(1)
             Rayfield:Destroy()
-            task.wait(0.5)
-            StartCheatMenu() -- Запускаем основной чит
+            StartCheatMenu() -- Запуск твоего основного чита
         else
-            -- Если ключ неверный или уже использован другим человеком
-            Rayfield:Notify({Title = "Ошибка", Content = "Статус: " .. tostring(msg), Duration = 5})
+            Rayfield:Notify({Title = "Ошибка ключа", Content = "Инфо: " .. tostring(message), Duration = 5})
         end
     end,
 })
 
--- [[ ТВОЙ ОСНОВНОЙ ЧИТ ]]
+-- [[ 4. ФУНКЦИЯ ТВОЕГО ЧИТА ]]
 function StartCheatMenu()
+    -- Сюда вставляй весь остальной код своего меню (со слайдерами и кнопками)
     local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 
 local Window = Rayfield:CreateWindow({
