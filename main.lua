@@ -1,65 +1,62 @@
--- [[ 1. СИСТЕМА КЛЮЧЕЙ ]]
+-- [[ 1. ОБНОВЛЕННАЯ СИСТЕМА (БЕЗ SECRET) ]]
 local MyKeyAuth = {}
 local HttpService = game:GetService("HttpService")
 
-function MyKeyAuth:init(name, ownerid, secret, ver)
-    self.name, self.ownerid, self.secret, self.ver = name, ownerid, secret, ver
-    local ok, res = pcall(function() 
-        return game:HttpGet("https://keyauth.win/api/1.2/?type=init&name="..name.."&ownerid="..ownerid.."&secret="..secret.."&ver="..ver)
-    end)
-    if not ok or res:find("<html>") then return false, "Ошибка сервера KeyAuth" end
-    local data = HttpService:JSONDecode(res)
-    if data.success then self.sessionid = data.sessionid return true else return false, data.message end
+function MyKeyAuth:init(name, ownerid, ver)
+    self.name, self.ownerid, self.ver = name, ownerid, ver
+    
+    -- Убрали secret из ссылки, оставили только то, что на твоем скриншоте
+    local url = "https://keyauth.win/api/1.2/?type=init&name="..name.."&ownerid="..ownerid.."&ver="..ver
+    
+    local ok, res = pcall(function() return game:HttpGet(url) end)
+    
+    if not ok then return false, "Ошибка сети" end
+    
+    local decode_ok, data = pcall(function() return HttpService:JSONDecode(res) end)
+    if not decode_ok then return false, "Ошибка парсинга ответа" end
+    
+    if data.success then
+        self.sessionid = data.sessionid
+        return true
+    else
+        return false, data.message
+    end
 end
 
 function MyKeyAuth:license(key)
-    if not self.sessionid then return false, "Нет сессии" end
-    local res = game:HttpGet("https://keyauth.win/api/1.2/?type=license&name="..self.name.."&ownerid="..self.ownerid.."&key="..key.."&sessionid="..self.sessionid)
+    -- В ссылке лицензии тоже убираем secret
+    local url = "https://keyauth.win/api/1.2/?type=license&name="..self.name.."&ownerid="..self.ownerid.."&key="..key.."&sessionid="..self.sessionid
+    local res = game:HttpGet(url)
     local data = HttpService:JSONDecode(res)
     return data.success, data.message
 end
 
--- [[ 2. ТВОИ ДАННЫЕ (ПРОВЕРЬ ИХ В ПАНЕЛИ ЕЩЕ РАЗ) ]]
-local name = "Dungeon Leveling Origin";
-local ownerid = "m2dvuf0xQy";
-local AppSecret = "e75c1fe66a123dbce41e9728f6d7f02b34e8c8575ea5db688bd50a6d3c446597";
-local version = "1.0";
+-- [[ 2. ТВОИ ДАННЫЕ (КАК НА СКРИНШОТЕ) ]]
+local name = "Dungeon Leveling Origin"
+local ownerid = "m2dvuf0xQy"
+local version = "1.0"
 
--- ПРАВИЛЬНЫЙ ВЫЗОВ (имена переменных должны совпадать с теми, что выше!)
-local init_ok, init_msg = MyKeyAuth:init(name, ownerid, AppSecret, version)
+-- Теперь вызываем init только с 3 параметрами
+local init_ok, init_msg = MyKeyAuth:init(name, ownerid, version)
 
--- [[ 3. ЗАПУСК ИНТЕРФЕЙСА ]]
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
-local KeyWindow = Rayfield:CreateWindow({
-    Name = "KeyAuth System | Dungeon Origin",
-    LoadingTitle = "Проверка...",
-    ConfigurationSaving = { Enabled = false }
-})
-
-local AuthTab = KeyWindow:CreateTab("Вход", 4483362458)
-local EnteredKey = ""
-
-AuthTab:CreateInput({
-    Name = "Лицензионный ключ",
-    PlaceholderText = "Вставь сюда...",
-    Callback = function(Text) EnteredKey = Text end,
-})
-
+-- [[ 3. КНОПКА В ТВОЕМ МЕНЮ ]]
+-- (Внутри колбэка кнопки Активировать используй это):
 AuthTab:CreateButton({
     Name = "Активировать",
     Callback = function()
-        if not init_ok then 
-            Rayfield:Notify({Title = "Ошибка", Content = "KeyAuth Init Fail: "..tostring(init_msg), Duration = 5})
-            return 
+        if not init_ok then
+            Rayfield:Notify({Title = "Ошибка", Content = "Init Fail: "..tostring(init_msg)})
+            return
         end
+        
         local success, msg = MyKeyAuth:license(EnteredKey)
         if success then
-            Rayfield:Notify({Title = "Успех!", Content = "Ключ активирован!", Duration = 3})
+            Rayfield:Notify({Title = "Доступ!", Content = "Взлом активирован"})
             task.wait(1)
             Rayfield:Destroy()
             StartCheatMenu()
         else
-            Rayfield:Notify({Title = "Ошибка", Content = "Ответ сервера: "..tostring(msg), Duration = 5})
+            Rayfield:Notify({Title = "Ошибка", Content = msg})
         end
     end,
 })
